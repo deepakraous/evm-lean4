@@ -13,6 +13,23 @@ def MAX_WORD256 : Word256 := 2^256 - 1
 -- Helper: safely wrap a Nat to Word256 range
 def toWord256 (n : Nat) : Word256 := n % (2^256)
 
+/- Basic Word256 arithmetic with wrapping -/
+def Word256.add (a b : Word256) : Word256 :=
+  toWord256 (a + b)
+
+def Word256.sub (a b : Word256) : Word256 :=
+  toWord256 (if a >= b then a - b else (2^256 + a) - b)
+
+def Word256.mul (a b : Word256) : Word256 :=
+  toWord256 (a * b)
+
+def Word256.eq (a b : Word256) : Bool :=
+  a == b
+
+def Word256.lt (a b : Word256) : Bool :=
+  a < b
+
+
 -- **Gas**: Represents computational cost
 abbrev Gas := Nat
 
