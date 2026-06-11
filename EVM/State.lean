@@ -23,6 +23,7 @@ structure ExecutionState where
   pc : Nat                -- program counter
   gas : Gas              -- remaining gas
   code : List Instruction -- bytecode
+  logs : List String      -- execution logs (simple strings)
   deriving Repr
 
 -- Create initial execution state
@@ -33,6 +34,7 @@ def ExecutionState.init (bytecode : List Instruction) (gas : Gas) : ExecutionSta
   pc := 0
   gas := gas
   code := bytecode
+  , logs := []
 }
 
 -- Helper: Get current instruction
