@@ -4,6 +4,9 @@
 import EVM.Core
 import EVM.Instructions
 import EVM.Execution
+import EVM.World
+import EVM.Transactions
+import EVM.StateTransition
 
 namespace EVM.Examples
 
@@ -65,7 +68,7 @@ def example_world : WorldState :=
   { accounts := [(sender, senderAcc), (recipient, recipientAcc)] }
 
 def example_tx : Transaction :=
-  { from := "alice", nonce := 0, gasPrice := 1, gasLimit := 1000, to := some "bob", value := 10, data := [] }
+  { sender := "alice", nonce := 0, gasPrice := 1, gasLimit := 1000, to := some "bob", value := 10, data := [] }
 
 #eval
   match Υ example_world example_tx 1000 with
@@ -90,7 +93,7 @@ def example_contract_world : WorldState :=
   { accounts := [(sender, senderAcc), (contract, contractAcc)] }
 
 def example_contract_tx : Transaction :=
-  { from := "alice", nonce := 0, gasPrice := 1, gasLimit := 1000, to := some "contract", value := 0, data := [] }
+  { sender := "alice", nonce := 0, gasPrice := 1, gasLimit := 1000, to := some "contract", value := 0, data := [] }
 
 #eval
   match Υ example_contract_world example_contract_tx 1000 with

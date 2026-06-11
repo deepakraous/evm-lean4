@@ -39,7 +39,7 @@ def ExecutionState.init (bytecode : List Instruction) (gas : Gas) : ExecutionSta
 
 -- Helper: Get current instruction
 def ExecutionState.currentInstruction (state : ExecutionState) : Option Instruction :=
-  state.code.get? state.pc
+  listGet? state.code state.pc
 
 -- Helper: Advance program counter
 def ExecutionState.nextPc (state : ExecutionState) : ExecutionState :=

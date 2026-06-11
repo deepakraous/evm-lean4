@@ -3,6 +3,12 @@
 
 namespace EVM
 
+/- Generic safe list getter used across modules -/
+def listGet? {α : Type} : List α -> Nat -> Option α
+  | [], _ => none
+  | x :: xs, 0 => some x
+  | x :: xs, n + 1 => listGet? xs n
+
 -- **Word256**: 256-bit values (core EVM word type)
 -- We represent these as natural numbers, modulo 2^256
 abbrev Word256 := Nat
@@ -71,20 +77,19 @@ def Memory.empty : Memory := ⟨[]⟩
 
 -- Read a 256-bit word from memory at a given address (in 32-byte word units)
 def Memory.read (m : Memory) (addr : Word256) : Word256 :=
-  if addr < m.cells.length then
-    m.cells.get! addr
-  else
-    0
+  match listGet? m.cells addr with
+  | some v => v
+  | none => 0
 
 -- Write a 256-bit word to memory
 def Memory.write (m : Memory) (addr : Word256) (v : Word256) : Memory :=
   let addr_nat := addr
-  if addr_nat < m.cells.length then
-    ⟨m.cells.set addr_nat v⟩
-  else
-    -- Extend the list with zeros up to addr, then add v
-    let zeros := List.replicate (addr_nat - m.cells.length) 0
-    ⟨m.cells ++ zeros ++ [v]⟩
+  let rec writeAux : Nat -> List Word256 -> List Word256
+    | 0, [] => [v]
+    | 0, x :: xs => v :: xs
+    | n + 1, [] => List.replicate (addr_nat) 0 ++ [v]
+    | n + 1, x :: xs => x :: writeAux n xs
+  ⟨writeAux addr_nat m.cells⟩
 
 -- Memory size in 32-byte words
 def Memory.size (m : Memory) : Nat := m.cells.length

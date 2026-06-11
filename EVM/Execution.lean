@@ -4,7 +4,6 @@
 import EVM.Core
 import EVM.Instructions
 import EVM.State
-import EVM.Gas
 
 namespace EVM
 
@@ -20,10 +19,47 @@ def fromSigned (i : Int) : Word256 :=
   let n := if i ≥ 0 then i else (2^256 : Int) + i
   toWord256 n.natAbs
 
+/- Minimal gas cost helper (inlined to avoid external dependency) -/
+def gasCost (instr : Instruction) : Nat :=
+  match instr with
+  | Instruction.stop => 0
+  | Instruction.add => 3
+  | Instruction.mul => 5
+  | Instruction.sub => 3
+  | Instruction.div => 5
+  | Instruction.sdiv => 5
+  | Instruction.mod => 5
+  | Instruction.smod => 5
+  | Instruction.addmod => 8
+  | Instruction.mulmod => 8
+  | Instruction.lt => 3
+  | Instruction.gt => 3
+  | Instruction.eq => 3
+  | Instruction.slt => 3
+  | Instruction.sgt => 3
+  | Instruction.and => 3
+  | Instruction.or => 3
+  | Instruction.xor => 3
+  | Instruction.not => 3
+  | Instruction.pop => 2
+  | Instruction.dup _ => 3
+  | Instruction.swap _ => 3
+  | Instruction.mload => 3
+  | Instruction.mstore => 12
+  | Instruction.msize => 2
+  | Instruction.sload => 50
+  | Instruction.sstore => 20000
+  | Instruction.push _ => 3
+  | Instruction.jump => 8
+  | Instruction.jumpi => 10
+  | Instruction.jumpdest => 1
+  | Instruction.ret => 0
+  | Instruction.revert => 0
+
 -- Execute a single instruction and return the updated state.
 def executeInstruction (instr : Instruction) (state : ExecutionState) :
     Option (ExecutionResult × ExecutionState) := do
-  let state ← state.deductGas (EVM.Gas.costOf instr) ? none
+  let state ← state.deductGas (gasCost instr)
   match instr with
   | Instruction.stop =>
     pure (ExecutionResult.ok, state)
@@ -145,7 +181,7 @@ def executeInstruction (instr : Instruction) (state : ExecutionState) :
     if n = 0 then
       none
     else
-      match state.stack.items.get? (n - 1) with
+      match listGet? state.stack.items (n - 1) with
       | none => none
       | some value =>
         let stack1 ← Stack.push state.stack value
@@ -154,13 +190,19 @@ def executeInstruction (instr : Instruction) (state : ExecutionState) :
   | Instruction.swap n =>
     if n = 0 then
       none
-    else if n < state.stack.items.length then
-      let top := state.stack.items.head!
-      let nth := state.stack.items.get! n
-      let items := state.stack.items.set 0 nth |>.set n top
-      pure (ExecutionResult.ok, { state with stack := { items := items } })
     else
-      none
+      match listGet? state.stack.items 0, listGet? state.stack.items n with
+      | some top, some nth =>
+        let rec rebuild (i : Nat) (lst : List Word256) : List Word256 :=
+          match lst with
+          | [] => []
+          | x :: xs =>
+            if i = 0 then nth :: rebuild (i+1) xs
+            else if i = n then top :: rebuild (i+1) xs
+            else x :: rebuild (i+1) xs
+        let items := rebuild 0 state.stack.items
+        pure (ExecutionResult.ok, { state with stack := { items := items } })
+      | _, _ => none
 
   | Instruction.mload =>
     let (addr, stack1) ← Stack.pop state.stack
@@ -216,7 +258,7 @@ def executeInstruction (instr : Instruction) (state : ExecutionState) :
   | Instruction.revert =>
     pure (ExecutionResult.revert, state)
 
-  | _ => none
+  
 
 -- Run bytecode until termination, out-of-gas, or error.
 def execute (bytecode : List Instruction) (gas : Gas) (fuel : Nat) :
