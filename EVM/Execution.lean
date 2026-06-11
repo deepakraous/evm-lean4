@@ -4,6 +4,7 @@
 import EVM.Core
 import EVM.Instructions
 import EVM.State
+import EVM.Gas
 
 namespace EVM
 
@@ -23,6 +24,10 @@ def fromSigned (i : Int) : Word256 :=
 -- Returns (result_status, new_state)
 def executeInstruction (instr : Instruction) (state : ExecutionState) :
     Option (ExecutionResult × ExecutionState) := do
+  -- Deduct gas cost for this instruction up-front
+  let cost := EVM.Gas.costOf instr
+  let state := (state.deductGas cost) ? none
+
   match instr with
   
   -- **STOP**: End execution
