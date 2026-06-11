@@ -4,6 +4,7 @@
 namespace EVM.Transactions
 
 structure Transaction where
+  from : String
   nonce : Nat
   gasPrice : Nat
   gasLimit : Nat

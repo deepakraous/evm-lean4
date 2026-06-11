@@ -54,4 +54,22 @@ def example_conditional : List Instruction :=
   let (result, state) := execute example_conditional 10000 1000
   (result, state.stack)
 
+-- **Example 4**: Simple transaction application
+open EVM
+
+def example_world : WorldState :=
+  let sender : Address := "alice"
+  let recipient : Address := "bob"
+  let senderAcc := { nonce := 0, balance := 100000, storage := Storage.empty, code := [] }
+  let recipientAcc := { nonce := 0, balance := 0, storage := Storage.empty, code := example_add }
+  { accounts := [(sender, senderAcc), (recipient, recipientAcc)] }
+
+def example_tx : Transaction :=
+  { from := "alice", nonce := 0, gasPrice := 1, gasLimit := 1000, to := some "bob", value := 10, data := [] }
+
+#eval
+  match Υ example_world example_tx 1000 with
+  | none => ("tx failed", 0)
+  | some (σ', r) => ("tx ok", r.cumulativeGasUsed)
+
 end EVM.Examples
