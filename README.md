@@ -38,6 +38,19 @@ The diagram reflects the latest Ethereum EVM reference and the Yellow Paper mode
 Read the full Yellow Paper Mermaid reference here:
 - [YELLOW_PAPER_MERMAID.md](YELLOW_PAPER_MERMAID.md)
 
+## JavaScript Interactive Simulator
+
+There is a small interactive EVM-like simulator in `simulator-js/` for quick experimentation.
+
+Quick start (locally):
+
+```bash
+cd simulator-js
+node index.js
+```
+
+On Repl.it: import the repo and it will start the simulator automatically.
+
 ## Core Components
 
 ### 1. **Core Types** (`EVM/Core.lean`)
