@@ -196,12 +196,8 @@ Transaction receipts are produced by execution:
 
 ```mermaid
 flowchart LR
-  SigmaT[[σ_t
-World state before Tx]] -->|Transaction T| Upsilon["Υ(σ_t, T)
-State transition"] --> SigmaT1[[σ_{t+1}
-World state after Tx]]
-  Upsilon --> Receipt["Receipt ρ
-status, gas, logs"]
+  SigmaT[[σ_t<br>World state before Tx]] -->|Transaction T| Upsilon["Υ(σ_t, T)<br>State transition"] --> SigmaT1[[σ_{t+1}<br>World state after Tx]]
+  Upsilon --> Receipt["Receipt ρ<br>status, gas, logs"]
 ```
 
 ## 5. Machine state μ components
