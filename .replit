@@ -1,2 +1,2 @@
-run = "lake build"
-language = "nix"
+run = "bash -lc 'cd simulator-js && npm install --silent && node index.js'"
+language = "nodejs"
