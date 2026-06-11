@@ -1,0 +1,16 @@
+{
+  "manifest_version": 3,
+  "name": "EVM Simulator",
+  "version": "0.1.0",
+  "description": "A secure interactive Ethereum EVM simulator as a Chrome extension.",
+  "action": {
+    "default_popup": "popup.html",
+    "default_title": "EVM Simulator"
+  },
+  "permissions": [],
+  "host_permissions": [],
+  "icons": {
+    "48": "icons/icon48.png",
+    "128": "icons/icon128.png"
+  }
+}

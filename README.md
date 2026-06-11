@@ -51,6 +51,25 @@ node index.js
 
 On Repl.it: import the repo and it will start the simulator automatically.
 
+## Web UI Simulator
+
+Run the browser-based simulator with the following static page:
+
+```bash
+cd simulator-js/web
+open index.html
+```
+
+This page provides a command input and live state dump for stack, memory, and storage.
+
+## Chrome Extension Simulator
+
+A secure Chrome extension is available under `simulator-extension/`.
+
+- Load it locally in Chrome from `chrome://extensions` via `Load unpacked`.
+- The extension uses Manifest V3, no permissions, and no inline script execution.
+- Submission instructions are documented in `simulator-extension/README.md`.
+
 ## Core Components
 
 ### 1. **Core Types** (`EVM/Core.lean`)
