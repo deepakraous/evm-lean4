@@ -20,28 +20,30 @@ flowchart TB
 
 ## 2. Yellow Paper symbol reference table
 
-| Symbol | Meaning | Notes |
-|---|---|---|
-| `σ` | World state | Maps addresses to account state |
-| `μ` | Machine state | Execution context for the EVM |
-| `Υ` | State transition function | `σ_{t+1} = Υ(σ_t, T)` |
-| `T` | Transaction | Message call or contract creation |
-| `H` | Block header | Contains metadata and roots |
-| `B` | Block | Header plus body |
-| `L` | Block gas limit | Maximum gas per block |
-| `n` | Block number | Height of the block |
-| `p` | Program counter (`PC`) | Instruction pointer |
-| `g` | Gas remaining | Gas available during execution |
-| `m` | Memory | Temporary byte-addressed machine memory |
-| `s` | Stack | Last-in first-out evaluation stack |
-| `S` | Storage | Persistent contract storage |
-| `A` | Account | Addressable account state |
-| `σ[a]` | Account state at address `a` | `(nonce, balance, storageRoot, codeHash)` |
-| `I` | Execution environment | Includes origin, caller, value, input |
-| `ω` | Block header values | Block-level parameters used by the EVM |
-| `c` | Code / bytecode | Sequence of opcodes executed by the EVM |
-| `v` | Value | Ether transferred by the transaction |
-| `ρ` | Receipt | Execution outcome and logs |
+| Symbol | Meaning | Formal context | Notes |
+|---|---|---|---|
+| `σ` | World state | Mapping from accounts to account state | Global state of the Ethereum network; updated by transactions |
+| `σ[a]` | Account state for address `a` | `σ[a] = (nonce, balance, storageRoot, codeHash)` | Includes balance, contract storage root, contract code hash |
+| `μ` | Machine state | `μ = (pc, gas, memory, stack, storage, code, address, origin, caller, value, input)` | Runtime environment inside the EVM |
+| `Υ` | State transition function | `σ_{t+1} = Υ(σ_t, T)` | Applies transaction `T` to world state `σ_t` |
+| `T` | Transaction | `T = (nonce, gasPrice, gasLimit, to, value, data, v, r, s)` | Either message call or contract creation |
+| `I` | Execution environment | Contains `origin`, `caller`, `value`, `input`, `address`, `gasPrice`, `gasLimit`, `code` | External execution parameters for the current call |
+| `H` | Block header | `H = (parentHash, ommersHash, beneficiary, stateRoot, transactionsRoot, receiptsRoot, logsBloom, difficulty, number, gasLimit, gasUsed, timestamp, extraData, mixHash, nonce)` | Block metadata used by Ethereum consensus and execution |
+| `B` | Block | `B = (H, transactions, uncleHeaders)` | Full block with header plus body |
+| `L` | Block gas limit | `L = H.gasLimit` | Maximum total gas available in block |
+| `n` | Block number | `n = H.number` | Height of the block in the chain |
+| `p` | Program counter | `p = μ.pc` | Current instruction index in bytecode |
+| `g` | Gas remaining | `g = μ.gas` | Remaining gas during execution |
+| `m` | Memory | `m = μ.memory` | Transient machine memory, zero-initialized, byte-addressed |
+| `s` | Stack | `s = μ.stack` | Last-in first-out word stack, max depth 1024 |
+| `S` | Storage | `S = μ.storage` | Persistent contract storage mapping key->value |
+| `A` | Account | Addressable identity in `σ` | Externally owned or contract account |
+| `c` | Code / bytecode | `c = μ.code` | Sequence of EVM instructions executed by the machine |
+| `v` | Value | Transaction or call value in Wei | Ether amount transferred with the call |
+| `ρ` | Receipt | Transaction execution result | Includes state root, gas used, logs, and status |
+| `ω` | Block header values | Environment values taken from `H` | Used by EVM opcodes and gas rules |
+| `Δ` | State diff | Difference between states | Used to represent changes from `σ_t` to `σ_{t+1}` |
+| `z` | Zero value | Empty or uninitialized storage/memory word | Often represented by `0` |
 
 ## 3. Yellow Paper math and model explanation
 
