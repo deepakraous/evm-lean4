@@ -2,6 +2,11 @@
 
 A **minimal, educational implementation** of the Ethereum Virtual Machine (EVM) written in pure Lean 4. This model focuses on clarity and correctness while covering the essential components of bytecode execution.
 
+## Repl.it / Replit ready
+
+- Added `.replit` and `replit.nix` to support running this repository in Repl.it.
+- Use `lake build` to build the project in the Repl.it shell.
+
 ## Architecture Overview
 
 ```

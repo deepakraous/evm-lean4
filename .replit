@@ -1,0 +1,2 @@
+run = "lake build"
+language = "nix"
