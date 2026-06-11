@@ -109,6 +109,9 @@ flowchart TD
 Updated to match the latest Ethereum EVM reference from:
 https://ethereum.org/en/developers/docs/evm/
 
+For a Yellow Paper structure converted into Mermaid diagrams, see:
+- [YELLOW_PAPER_MERMAID.md](YELLOW_PAPER_MERMAID.md)
+
 ### Step 1: Bytecode → Instruction List
 
 ```lean

@@ -217,6 +217,9 @@ flowchart LR
 - `PC` is the program counter, the current instruction number.
 - `push`, `pop`, `jump` are described in words and with small tables.
 
+For a complete Yellow Paper structure mapped into Mermaid, see:
+- [YELLOW_PAPER_MERMAID.md](YELLOW_PAPER_MERMAID.md)
+
 ### 2.4 Learn opcode meaning step by step
 Do one opcode at a time.
 

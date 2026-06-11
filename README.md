@@ -30,6 +30,9 @@ flowchart TD
 
 The diagram reflects the latest Ethereum EVM reference and the Yellow Paper model for machine state (μ), world state (σ), stack, memory, storage, gas, and opcode execution.
 
+Read the full Yellow Paper Mermaid reference here:
+- [YELLOW_PAPER_MERMAID.md](YELLOW_PAPER_MERMAID.md)
+
 ## Core Components
 
 ### 1. **Core Types** (`EVM/Core.lean`)
