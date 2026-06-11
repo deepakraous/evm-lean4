@@ -64,6 +64,8 @@ These are the smallest pieces of Lean that you need first.
 
 ![Lean syntax](gif_lean_syntax.gif)
 
+![Lean 4 diagram](diagram_lean4.jpg)
+
 ### 1.3 Run small examples
 1. Create a file, for example `example.lean`.
 2. Add this code:
@@ -149,6 +151,8 @@ The EVM is the machine that runs contract code.
 - An **opcode** is one instruction the EVM can run.
 
 ![EVM architecture](gif_evm_arch.gif)
+
+![EVM diagram](diagram_evm.jpg)
 
 Use these mental images:
 - Stack = stack of plates
