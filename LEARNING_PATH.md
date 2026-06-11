@@ -217,6 +217,8 @@ Open the files in this order and do not worry about every detail at first.
    - Run the real examples.
    - See how the model behaves.
 
+![Repo path](gif_repo_path.gif)
+
 ### 3.2 Task-based reading
 Do these tasks one by one.
 
@@ -253,6 +255,8 @@ As you read the repo:
 
 ## 4. Step-by-step learning schedule
 This schedule is designed for beginners and does not require math experience.
+
+![Learning schedule](gif_schedule.gif)
 
 ### Week 1: Learn Lean 4 from scratch
 - **Day 1:** Install Lean and Lake, create a project.
