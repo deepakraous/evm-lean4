@@ -56,27 +56,64 @@ const vm = new VM();
 
 const rl = readline.createInterface({ input: process.stdin, output: process.stdout, prompt: 'evm> ' });
 
-console.log('Interactive EVM simulator. Commands: push <n>, add, sub, mul, div, mstore, mload, sstore, sload, pop, stop, dump, help');
+const parseInstruction = (token, args) => {
+  if (token === 'push') {
+    if (args.length < 1) return { error: 'push requires a value' }
+    return { instr: 'push', args: [BigInt(args[0])] }
+  }
+  if (['add','sub','mul','div','pop','mstore','mload','sstore','sload','msize','stop','dump','exit','help'].includes(token)) {
+    return { instr: token, args };
+  }
+  return { error: `unknown instruction: ${token}` };
+};
+
+console.log('Interactive EVM simulator. Commands: push <n>, add, sub, mul, div, mstore, mload, sstore, sload, pop, msize, run, dump, help');
 rl.prompt();
 
 rl.on('line', (line) => {
   const parts = line.trim().split(/\s+/);
   const cmd = parts[0];
   if(!cmd) { rl.prompt(); return }
-  if(cmd === 'help') { console.log('Commands: push <n>, add, sub, mul, div, mstore, mload, sstore, sload, pop, stop, dump, exit'); rl.prompt(); return }
-  if(cmd === 'exit' || cmd === 'stop') { console.log('Stopping.'); rl.close(); return }
-  if(cmd === 'dump') { console.log(JSON.stringify(vm.dump(), null, 2)); rl.prompt(); return }
-  if(cmd === 'push') {
-    if(parts.length<2) { console.log('push requires a value'); rl.prompt(); return }
-    const v = BigInt(parts[1]); console.log(vm.runInstr('push',[v])); rl.prompt(); return
-  }
-  if(cmd === 'mstore' || cmd === 'mload' || cmd === 'sstore' || cmd === 'sload') {
-    const res = vm.runInstr(cmd, parts.slice(1));
-    console.log(res);
+  if(cmd === 'help') {
+    console.log('Commands: push <n>, add, sub, mul, div, pop, mstore, mload, sstore, sload, msize, run <instr...>, dump, exit');
     rl.prompt(); return
   }
-  // other instructions
-  const res = vm.runInstr(cmd, parts.slice(1));
+  if(cmd === 'exit' || cmd === 'stop') { console.log('Stopping.'); rl.close(); return }
+  if(cmd === 'dump') { console.log(JSON.stringify(vm.dump(), null, 2)); rl.prompt(); return }
+  if(cmd === 'run') {
+    const tokens = parts.slice(1);
+    let i = 0;
+    while (i < tokens.length) {
+      const token = tokens[i];
+      const args = [];
+      if (token === 'push') {
+        if (i + 1 >= tokens.length) {
+          console.log('run: push requires a value');
+          break;
+        }
+        args.push(tokens[i + 1]);
+        i += 2;
+      } else {
+        i += 1;
+      }
+      const parsed = parseInstruction(token, args);
+      if (parsed.error) {
+        console.log(parsed.error);
+        break;
+      }
+      const res = vm.runInstr(parsed.instr, parsed.args);
+      console.log(`${token} -> ${res}`);
+    }
+    rl.prompt();
+    return
+  }
+  const parsed = parseInstruction(cmd, parts.slice(1));
+  if(parsed.error) {
+    console.log(parsed.error);
+    rl.prompt();
+    return
+  }
+  const res = vm.runInstr(parsed.instr, parsed.args);
   console.log(res);
   rl.prompt();
 }).on('close', () => {
