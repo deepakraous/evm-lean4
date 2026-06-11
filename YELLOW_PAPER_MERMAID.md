@@ -160,79 +160,253 @@ The execution of `T` can be either a message call or contract creation. In both 
 
 ## 4. State transition function
 
+The core Yellow Paper equation is the state transition function:
+
+```text
+σ_{t+1} = Υ(σ_t, T)
+```
+
+- `σ_t` is the world state before the transaction.
+- `T` is the transaction being executed.
+- `Υ` is the state transition operator in Yellow Paper §4.3.
+
+This operator includes:
+- transaction validation
+- gas deduction and balance updates
+- execution of message call or contract creation
+- receipt generation
+- world state update
+
+A higher-level description:
+
+```text
+Υ(σ, T) =
+  if validTransaction(σ, T) then
+    let (σ', ρ) := executeTransaction(σ, T)
+    σ'
+  else
+    σ
+```
+
+Transaction receipts are produced by execution:
+
+```text
+ρ = (postStateRoot, cumulativeGasUsed, logsBloom, logs, status)
+```
+
 ```mermaid
 flowchart LR
-  SigmaT[[σ_t\nWorld state]] -->|Transaction T| Upsilon["Υ(σ_t, T)\nState transition"] --> SigmaT1[[σ_t+1\nWorld state]]
+  SigmaT[[σ_t
+World state before Tx]] -->|Transaction T| Upsilon["Υ(σ_t, T)
+State transition"] --> SigmaT1[[σ_{t+1}
+World state after Tx]]
+  Upsilon --> Receipt["Receipt ρ
+status, gas, logs"]
 ```
 
 ## 5. Machine state μ components
 
+Yellow Paper §9 defines the EVM machine state `μ`:
+
+```text
+μ = (pc, gas, memory, stack, storage, code, address, origin, caller, value, input)
+```
+
+Component definitions:
+- `pc`: program counter, current byte offset in code.
+- `gas`: remaining gas for the current execution.
+- `memory`: transient byte-array memory, expands on demand.
+- `stack`: LIFO stack of 256-bit words, maximum depth 1024.
+- `storage`: persistent contract storage state for current contract.
+- `code`: current runtime bytecode executed by the EVM.
+- `address`: address of the contract currently executing.
+- `origin`: original transaction sender address.
+- `caller`: immediate caller of the current message.
+- `value`: Wei transferred with the current call.
+- `input`: calldata or init code passed into execution.
+
+Machine state updates follow these rules:
+
+```text
+pc' = pc + instructionSize(opcode)
+
+g' = g - cost(opcode)
+
+stack' = stackOp(opcode, stack)
+
+memory' = memoryOp(opcode, memory)
+
+storage' = storageOp(opcode, storage)
+```
+
+If `g' < 0`, the EVM throws an out-of-gas exception and execution reverts.
+
 ```mermaid
 flowchart TB
-  MU["Machine state μ"] --> PC["Program counter (PC)"]
-  MU --> Stack["Stack (LIFO)"]
-  MU --> Memory["Memory (temporary)"]
-  MU --> Storage["Storage (persistent)"]
-  MU --> Gas["Gas remaining"]
-  MU --> Code["Code / bytecode"]
-  MU --> Addr["Active account / recipient"]
+  MU["Machine state μ"] --> PC["pc: program counter"]
+  MU --> Gas["gas: remaining gas"]
+  MU --> Memory["memory: temporary byte-array"]
+  MU --> Stack["stack: 256-bit word LIFO"]
+  MU --> Storage["storage: contract storage"]
+  MU --> Code["code: runtime bytecode"]
+  MU --> Addr["address: active contract"]
+  MU --> Origin["origin: tx sender"]
+  MU --> Caller["caller: immediate sender"]
+  MU --> Value["value: Wei transferred"]
+  MU --> Input["input: calldata / init code"]
 ```
 
-## 6. Transaction type classification
+## 6. Transaction classification and execution
+
+Transactions in Yellow Paper §4.3 are classified as either a message call or contract creation.
+
+```text
+T = (nonce, gasPrice, gasLimit, to, value, data, v, r, s)
+```
+
+- If `T.to` is non-empty, the transaction is a message call.
+- If `T.to` is empty, the transaction is a contract creation.
+
+Execution environment:
+
+```text
+I = (origin, caller, value, input, address, gasPrice, gasLimit, code)
+```
+
+Message call execution:
+
+```text
+σ' = executeMessageCall(σ, T)
+```
+
+Contract creation execution:
+
+```text
+σ' = createContract(σ, T)
+```
+
+The message call and creation share the same execution engine but differ in how `code`, `address`, and `storage` are initialized.
 
 ```mermaid
 flowchart LR
-  Transaction["Transaction T"] -->|Message call| Call["Message Call"]
-  Transaction -->|Contract creation| Create["Contract Creation"]
+  Transaction["Transaction T"] -->|T.to ≠ ∅| Call["Message call"]
+  Transaction -->|T.to = ∅| Create["Contract creation"]
   Call --> Execute["EVM execution"]
-  Create --> Deploy["Contract code deployment"]
+  Create --> Deploy["Contract creation flow"]
+  Execute --> State["Update σ & μ"]
+  Deploy --> State
 ```
 
-## 7. EVM execution lifecycle
+## 7. Account and contract state model
+
+Yellow Paper §4 defines account state as:
+
+```text
+σ[a] = (nonce, balance, storageRoot, codeHash)
+```
+
+Account fields:
+- `nonce`: transaction count for `a`.
+- `balance`: Wei balance held by `a`.
+- `storageRoot`: root hash of the contract storage trie.
+- `codeHash`: Keccak-256 hash of the account's runtime code.
+
+For contract accounts:
+
+```text
+codeHash = Keccak(code)
+storageRoot = rootTrie(storage)
+```
+
+Balance transfer example:
+
+```text
+balance_{sender}' = balance_{sender} - value - gasUsed * gasPrice
+balance_{recipient}' = balance_{recipient} + value
+```
 
 ```mermaid
 flowchart LR
-  Start["Begin transaction execution"] --> Fetch["Fetch opcode"]
-  Fetch --> Decode["Decode instruction"]
-  Decode --> Execute["Execute opcode"]
-  Execute --> Update["Update μ and σ"]
-  Update --> Next["Advance PC or halt"]
-  Next --> End["Return / revert / stop"]
-```
-
-## 6. Account state model
-
-```mermaid
-flowchart LR
-  Account["Account state"] --> Nonce["nonce"]
+  Account["Account state σ[a]"] --> Nonce["nonce"]
   Account --> Balance["balance"]
-  Account --> StorageRoot["storage root"]
-  Account --> CodeHash["code hash"]
+  Account --> StorageRoot["storageRoot"]
+  Account --> CodeHash["codeHash"]
 ```
 
-## 7. Block processing overview
+## 8. Block processing and final state
+
+Yellow Paper §11 defines a block as:
+
+```text
+B = (H, transactions, uncleHeaders)
+```
+
+Block header `H` contains the execution roots:
+
+```text
+H = (parentHash, ommersHash, beneficiary, stateRoot, transactionsRoot, receiptsRoot,
+     logsBloom, difficulty, number, gasLimit, gasUsed, timestamp, extraData, mixHash, nonce)
+```
+
+After processing all transactions in the block:
+
+```text
+stateRoot' = rootTrie(σ_{t+1})
+receiptsRoot = rootTrie([ρ_1, ρ_2, ..., ρ_n])
+logsBloom = bloom([logs_1, ..., logs_n])
+```
+
+Gas used by the block:
+
+```text
+gasUsed = Σ gasUsed(T_i)
+```
 
 ```mermaid
 flowchart LR
-  Parent["Parent block hash"] --> Block["Block header & body"]
+  Parent["Parent block hash"] --> Block["Block header H & body"]
   Block --> Transactions["Transactions list"]
-  Transactions --> State["World state update σ_{t+1}"]
+  Transactions --> Execute["Execute each T via Υ"]
+  Execute --> State["New world state σ_{t+1}"]
   Block --> Receipts["Receipts & logs"]
   State --> Root["New state root"]
 ```
 
-## 8. Gas accounting summary
+## 9. Gas accounting summary
+
+Yellow Paper §11 explains gas costs and refunds.
+
+For each opcode:
+
+```text
+g' = g - cost(opcode)
+```
+
+If `g' < 0`, execution aborts with out-of-gas.
+
+Transaction gas accounting:
+
+```text
+gasUsed(T) = gasLimit - gasRemaining
+refundAmount = min(refundCounter, floor(gasUsed / 2))
+```
+
+Final gas settlement:
+
+```text
+refundValue = gasRemaining * gasPrice
+```
 
 ```mermaid
 flowchart LR
-  StartGas["Starting gas"] --> Instruction["Opcode cost"]
-  Instruction --> GasUsed["Gas used"]
-  GasUsed --> GasLeft["Remaining gas"]
-  GasLeft --> Refund["Possible gas refund"]
-  Refund --> EndGas["Final gas refund / burn"]
+  StartGas["Starting gas limit"] --> OpcodeCost["Subtract opcode cost"]
+  OpcodeCost --> GasUsed["Gas used"]
+  GasUsed --> GasLeft["Gas remaining"]
+  GasLeft --> Refund["Apply refund rules"]
+  Refund --> EndGas["Final gas accounting"]
 ```
 
-## 9. How to read this reference
+## 10. How to read this reference
 
 - Use this file to map key Yellow Paper models into diagrams.
 - Each Mermaid graph is a visual summary of core Yellow Paper concepts.
