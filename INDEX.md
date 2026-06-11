@@ -21,6 +21,11 @@
    - Execution engine walkthrough
    - Error handling philosophy
 
+4. **[LEARNING_PATH.md](LEARNING_PATH.md)** — 15 min read
+   - Step-by-step learning path for Lean 4 and Ethereum EVM
+   - Practical weekly plan
+   - LinkedIn post copy for sharing your progress
+
 ### Code Reference
 4. **[QUICKREF.lean](QUICKREF.lean)** — Code templates
    - How to add new instructions
