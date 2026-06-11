@@ -2,7 +2,6 @@
 -- Minimal world state mapping addresses to accounts
 
 import EVM.Core
-import EVM.Storage
 
 namespace EVM
 

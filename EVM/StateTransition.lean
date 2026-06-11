@@ -32,9 +32,8 @@ def Υ (σ : WorldState) (T : Transaction) (fuel : Nat) : Option (WorldState × 
     let recipientAcc := σ1.findAccount recipient |> Option.getD { nonce := 0, balance := 0, storage := Storage.empty, code := [] }
     -- If recipient has code, execute it; otherwise, plain value transfer
     if recipientAcc.code = [] then
-      -- simple transfer, credit recipient and finalize receipt
+      -- simple transfer, credit recipient and refund all unused gas
       let σ2 := σ1.credit recipient T.value
-      -- refund gas (assume all gas unused for simple transfer)
       let σ3 := σ2.credit T.from (T.gasLimit * T.gasPrice)
       let receipt : Receipt := { postStateRoot := 0, cumulativeGasUsed := 0, logsBloom := 0, logs := [], status := ExecutionResult.ok }
       some (σ3, receipt)
@@ -44,7 +43,7 @@ def Υ (σ : WorldState) (T : Transaction) (fuel : Nat) : Option (WorldState × 
       let gasUsed := T.gasLimit - execState.gas
       let refund := execState.gas * T.gasPrice
       let σ2 := σ1.credit T.from refund
-      let σ3 := σ2.credit recipient T.value
+      let σ3 := if res = ExecutionResult.ok then σ2.credit recipient T.value else σ2
       let receipt : Receipt := { postStateRoot := 0, cumulativeGasUsed := gasUsed, logsBloom := 0, logs := execState.logs, status := res }
       some (σ3, receipt)
 

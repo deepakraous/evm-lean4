@@ -258,6 +258,23 @@ Open the files in this order and do not worry about every detail at first.
 
 5. `EVM/Examples.lean`
   - Run the real examples.
+
+3.2 Verify the complete Lean EVM implementation
+After you have read the files above, confirm the whole model by running the example programs and checking the interpreter behavior.
+
+- Open `tests/evm_test.lean` and inspect the smoke tests.
+- Run `lake build` in the repository root to verify the Lean project compiles.
+- Use `#eval` examples in `EVM/Examples.lean` to see interpreter results in the editor.
+- Review `EVM/StateTransition.lean` for transaction-level behavior and receipt generation.
+
+This repository now contains a complete educational Lean EVM model, including:
+- stack operations and arithmetic
+- memory and storage handling
+- opcode gas accounting
+- jumps, returns, and reverts
+- a simple world state and transaction execution path
+
+If you are learning the EVM, use this code as the reference implementation for the engine you build next.
   - See how the model behaves.
 
 6. `EVM/Transactions.lean` (new)

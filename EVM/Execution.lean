@@ -17,305 +17,210 @@ def toSigned (w : Word256) : Int :=
 
 -- Helper: Convert signed Int back to Word256
 def fromSigned (i : Int) : Word256 :=
-  let n := if i ≥ 0 then i else 2^256 + i
+  let n := if i ≥ 0 then i else (2^256 : Int) + i
   toWord256 n.natAbs
 
--- **executeInstruction**: Execute a single instruction
--- Returns (result_status, new_state)
+-- Execute a single instruction and return the updated state.
 def executeInstruction (instr : Instruction) (state : ExecutionState) :
     Option (ExecutionResult × ExecutionState) := do
-  -- Deduct gas cost for this instruction up-front
-  let cost := EVM.Gas.costOf instr
-  let state := (state.deductGas cost) ? none
-
+  let state ← state.deductGas (EVM.Gas.costOf instr) ? none
   match instr with
-  
-  -- **STOP**: End execution
   | Instruction.stop =>
     pure (ExecutionResult.ok, state)
-  
-  -- **ADD**: Pop two values, push their sum
+
   | Instruction.add =>
-    let s ← state.stack.pop
-    let (b, s') ← Stack.pop s.2
-    let (a, s'') ← Stack.pop s'.2
-    let sum := toWord256 (a + b)
-    let s''' ← s''.push sum
-    pure (ExecutionResult.ok, { state with stack := s''' })
-  
-  -- **MUL**: Pop two values, push their product
+    let (a, stack1) ← Stack.pop state.stack
+    let (b, stack2) ← Stack.pop stack1
+    let stack3 ← Stack.push stack2 (toWord256 (a + b))
+    pure (ExecutionResult.ok, { state with stack := stack3 })
+
   | Instruction.mul =>
-    let s ← state.stack.pop
-    let (b, s') ← Stack.pop s.2
-    let (a, s'') ← Stack.pop s'.2
-    let prod := toWord256 (a * b)
-    let s''' ← s''.push prod
-    pure (ExecutionResult.ok, { state with stack := s''' })
-  
-  -- **SUB**: Pop a, b; push (a - b)
+    let (a, stack1) ← Stack.pop state.stack
+    let (b, stack2) ← Stack.pop stack1
+    let stack3 ← Stack.push stack2 (toWord256 (a * b))
+    pure (ExecutionResult.ok, { state with stack := stack3 })
+
   | Instruction.sub =>
-    let s ← state.stack.pop
-    let (b, s') ← Stack.pop s.2
-    let (a, s'') ← Stack.pop s'.2
-    let diff := toWord256 (if a ≥ b then a - b else 2^256 + a - b)
-    let s''' ← s''.push diff
-    pure (ExecutionResult.ok, { state with stack := s''' })
-  
-  -- **DIV**: Pop a, b; push (a / b), or 0 if b = 0
+    let (a, stack1) ← Stack.pop state.stack
+    let (b, stack2) ← Stack.pop stack1
+    let stack3 ← Stack.push stack2 (toWord256 (if a ≥ b then a - b else 2^256 + a - b))
+    pure (ExecutionResult.ok, { state with stack := stack3 })
+
   | Instruction.div =>
-    let s ← state.stack.pop
-    let (b, s') ← Stack.pop s.2
-    let (a, s'') ← Stack.pop s'.2
-    let result := if b = 0 then 0 else a / b
-    let s''' ← s''.push result
-    pure (ExecutionResult.ok, { state with stack := s''' })
+    let (a, stack1) ← Stack.pop state.stack
+    let (b, stack2) ← Stack.pop stack1
+    let stack3 ← Stack.push stack2 (if b = 0 then 0 else a / b)
+    pure (ExecutionResult.ok, { state with stack := stack3 })
 
-  -- **SDIV**: signed division
   | Instruction.sdiv =>
-    let s ← state.stack.pop
-    let (b, s') ← Stack.pop s.2
-    let (a, s'') ← Stack.pop s'.2
-    if b = 0 then
-      let s''' ← s''.push 0
-      pure (ExecutionResult.ok, { state with stack := s''' })
-    else
-      let ra := toSigned a
-      let rb := toSigned b
-      let q := ra / rb
-      let s''' ← s''.push (fromSigned q)
-      pure (ExecutionResult.ok, { state with stack := s''' })
-  
-  -- **LT**: Pop a, b; push 1 if a < b else 0
+    let (a, stack1) ← Stack.pop state.stack
+    let (b, stack2) ← Stack.pop stack1
+    let stack3 ← Stack.push stack2 (if b = 0 then 0 else fromSigned ((toSigned a) / (toSigned b)))
+    pure (ExecutionResult.ok, { state with stack := stack3 })
+
+  | Instruction.mod =>
+    let (a, stack1) ← Stack.pop state.stack
+    let (b, stack2) ← Stack.pop stack1
+    let stack3 ← Stack.push stack2 (if b = 0 then 0 else a % b)
+    pure (ExecutionResult.ok, { state with stack := stack3 })
+
+  | Instruction.smod =>
+    let (a, stack1) ← Stack.pop state.stack
+    let (b, stack2) ← Stack.pop stack1
+    let stack3 ← Stack.push stack2 (if b = 0 then 0 else fromSigned ((toSigned a) % (toSigned b)))
+    pure (ExecutionResult.ok, { state with stack := stack3 })
+
+  | Instruction.addmod =>
+    let (a, stack1) ← Stack.pop state.stack
+    let (b, stack2) ← Stack.pop stack1
+    let (m, stack3) ← Stack.pop stack2
+    let stack4 ← Stack.push stack3 (if m = 0 then 0 else (a + b) % m)
+    pure (ExecutionResult.ok, { state with stack := stack4 })
+
+  | Instruction.mulmod =>
+    let (a, stack1) ← Stack.pop state.stack
+    let (b, stack2) ← Stack.pop stack1
+    let (m, stack3) ← Stack.pop stack2
+    let stack4 ← Stack.push stack3 (if m = 0 then 0 else (a * b) % m)
+    pure (ExecutionResult.ok, { state with stack := stack4 })
+
   | Instruction.lt =>
-    let s ← state.stack.pop
-    let (b, s') ← Stack.pop s.2
-    let (a, s'') ← Stack.pop s'.2
-    let result := if a < b then 1 else 0
-    let s''' ← s''.push result
-    pure (ExecutionResult.ok, { state with stack := s''' })
+    let (a, stack1) ← Stack.pop state.stack
+    let (b, stack2) ← Stack.pop stack1
+    let stack3 ← Stack.push stack2 (if a < b then 1 else 0)
+    pure (ExecutionResult.ok, { state with stack := stack3 })
 
-  -- **GT**: Pop a, b; push 1 if a > b else 0
   | Instruction.gt =>
-    let s ← state.stack.pop
-    let (b, s') ← Stack.pop s.2
-    let (a, s'') ← Stack.pop s'.2
-    let result := if a > b then 1 else 0
-    let s''' ← s''.push result
-    pure (ExecutionResult.ok, { state with stack := s''' })
-  
-  -- **EQ**: Pop a, b; push 1 if a == b else 0
+    let (a, stack1) ← Stack.pop state.stack
+    let (b, stack2) ← Stack.pop stack1
+    let stack3 ← Stack.push stack2 (if a > b then 1 else 0)
+    pure (ExecutionResult.ok, { state with stack := stack3 })
+
   | Instruction.eq =>
-    let s ← state.stack.pop
-    let (b, s') ← Stack.pop s.2
-    let (a, s'') ← Stack.pop s'.2
-    let result := if a == b then 1 else 0
-    let s''' ← s''.push result
-    pure (ExecutionResult.ok, { state with stack := s''' })
-  
-  -- **AND**: Bitwise AND
+    let (a, stack1) ← Stack.pop state.stack
+    let (b, stack2) ← Stack.pop stack1
+    let stack3 ← Stack.push stack2 (if a == b then 1 else 0)
+    pure (ExecutionResult.ok, { state with stack := stack3 })
+
+  | Instruction.slt =>
+    let (a, stack1) ← Stack.pop state.stack
+    let (b, stack2) ← Stack.pop stack1
+    let stack3 ← Stack.push stack2 (if toSigned a < toSigned b then 1 else 0)
+    pure (ExecutionResult.ok, { state with stack := stack3 })
+
+  | Instruction.sgt =>
+    let (a, stack1) ← Stack.pop state.stack
+    let (b, stack2) ← Stack.pop stack1
+    let stack3 ← Stack.push stack2 (if toSigned a > toSigned b then 1 else 0)
+    pure (ExecutionResult.ok, { state with stack := stack3 })
+
   | Instruction.and =>
-    let s ← state.stack.pop
-    let (b, s') ← Stack.pop s.2
-    let (a, s'') ← Stack.pop s'.2
-    let result := a &&& b  -- Lean 4 bitwise AND
-    let s''' ← s''.push result
-    pure (ExecutionResult.ok, { state with stack := s''' })
-  
-  -- **OR**: Bitwise OR
+    let (a, stack1) ← Stack.pop state.stack
+    let (b, stack2) ← Stack.pop stack1
+    let stack3 ← Stack.push stack2 (a &&& b)
+    pure (ExecutionResult.ok, { state with stack := stack3 })
+
   | Instruction.or =>
-    let s ← state.stack.pop
-    let (b, s') ← Stack.pop s.2
-    let (a, s'') ← Stack.pop s'.2
-    let result := a ||| b  -- Lean 4 bitwise OR
-    let s''' ← s''.push result
-    pure (ExecutionResult.ok, { state with stack := s''' })
+    let (a, stack1) ← Stack.pop state.stack
+    let (b, stack2) ← Stack.pop stack1
+    let stack3 ← Stack.push stack2 (a ||| b)
+    pure (ExecutionResult.ok, { state with stack := stack3 })
 
-  -- **XOR**: Bitwise XOR
   | Instruction.xor =>
-    let s ← state.stack.pop
-    let (b, s') ← Stack.pop s.2
-    let (a, s'') ← Stack.pop s'.2
-    let result := a ^^^ b
-    let s''' ← s''.push result
-    pure (ExecutionResult.ok, { state with stack := s''' })
+    let (a, stack1) ← Stack.pop state.stack
+    let (b, stack2) ← Stack.pop stack1
+    let stack3 ← Stack.push stack2 (a ^^^ b)
+    pure (ExecutionResult.ok, { state with stack := stack3 })
 
-  -- **NOT**: Bitwise NOT (ones' complement)
   | Instruction.not =>
-    let s ← state.stack.pop
-    let (a, s') ← Stack.pop s.2
-    let result := toWord256 (2^256 - 1 - a)
-    let s'' ← s'.push result
-    pure (ExecutionResult.ok, { state with stack := s'' })
-  
-  -- **POP**: Remove top stack item
+    let (a, stack1) ← Stack.pop state.stack
+    let stack2 ← Stack.push stack1 (toWord256 ((2^256 : Nat) - 1 - a))
+    pure (ExecutionResult.ok, { state with stack := stack2 })
+
   | Instruction.pop =>
-    let _s ← state.stack.pop
-    pure (ExecutionResult.ok, { state with stack := _s.2 })
+    let (_, stack1) ← Stack.pop state.stack
+    pure (ExecutionResult.ok, { state with stack := stack1 })
 
-  -- **DUP**: Duplicate Nth stack item (1-based)
   | Instruction.dup n =>
-    let s0 := state.stack
-    let idx := n - 1
-    if idx < s0.items.length then
-      let v := s0.items.get! idx
-      let s' ← s0.push v
-      pure (ExecutionResult.ok, { state with stack := s' })
-    else
+    if n = 0 then
       none
+    else
+      match state.stack.items.get? (n - 1) with
+      | none => none
+      | some value =>
+        let stack1 ← Stack.push state.stack value
+        pure (ExecutionResult.ok, { state with stack := stack1 })
 
-  -- **SWAP**: Swap top with Nth (1-based)
   | Instruction.swap n =>
-    let s0 := state.stack
-    let idx := n
-    if idx < s0.items.length then
-      let top := s0.items.head!
-      let nth := s0.items.get! idx
-      let items := s0.items.set 0 nth |>.set idx top
+    if n = 0 then
+      none
+    else if n < state.stack.items.length then
+      let top := state.stack.items.head!
+      let nth := state.stack.items.get! n
+      let items := state.stack.items.set 0 nth |>.set n top
       pure (ExecutionResult.ok, { state with stack := { items := items } })
     else
       none
-  
-  -- **MLOAD**: Pop address, push memory value
-  | Instruction.mload =>
-    let s ← state.stack.pop
-    let (addr, s') ← s.2
-    let value := Memory.read state.memory addr
-    let s'' ← s'.push value
-    pure (ExecutionResult.ok, { state with stack := s'' })
 
-  -- **MSIZE**: Push memory size
-  | Instruction.msize =>
-    let sz := toWord256 state.memory.size
-    let s ← state.stack.push sz
-    pure (ExecutionResult.ok, { state with stack := s })
-  
-  -- **MSTORE**: Pop value and address, write to memory
+  | Instruction.mload =>
+    let (addr, stack1) ← Stack.pop state.stack
+    let value := Memory.read state.memory addr
+    let stack2 ← Stack.push stack1 value
+    pure (ExecutionResult.ok, { state with stack := stack2 })
+
   | Instruction.mstore =>
-    let s ← state.stack.pop
-    let (value, s') ← s.2
-    let (addr, s'') ← Stack.pop s'
-    let mem' := Memory.write state.memory addr value
-    let state' := { state with stack := s'', memory := mem' }
+    let (value, stack1) ← Stack.pop state.stack
+    let (addr, stack2) ← Stack.pop stack1
+    let memory' := Memory.write state.memory addr value
+    let state' := { state with memory := memory', stack := stack2 }
     pure (ExecutionResult.ok, state'.log s!"mstore addr={addr} value={value}")
-  
-  -- **SLOAD**: Pop key, push storage value
+
+  | Instruction.msize =>
+    let stack1 ← Stack.push state.stack (toWord256 state.memory.size)
+    pure (ExecutionResult.ok, { state with stack := stack1 })
+
   | Instruction.sload =>
-    let s ← state.stack.pop
-    let (key, s') ← s.2
+    let (key, stack1) ← Stack.pop state.stack
     let value := Storage.read state.storage key
-    let s'' ← s'.push value
-    let state' := { state with stack := s'' }
-    pure (ExecutionResult.ok, state'.log s!"sload key={key} value={value}")
-  
-  -- **SSTORE**: Pop value and key, write to storage
+    let stack2 ← Stack.push stack1 value
+    pure (ExecutionResult.ok, { state with stack := stack2 }.log s!"sload key={key} value={value}")
+
   | Instruction.sstore =>
-    let s ← state.stack.pop
-    let (value, s') ← s.2
-    let (key, s'') ← Stack.pop s'
-    let stor' := Storage.write state.storage key value
-    let state' := { state with stack := s'', storage := stor' }
+    let (value, stack1) ← Stack.pop state.stack
+    let (key, stack2) ← Stack.pop stack1
+    let storage' := Storage.write state.storage key value
+    let state' := { state with storage := storage', stack := stack2 }
     pure (ExecutionResult.ok, state'.log s!"sstore key={key} value={value}")
 
-  -- **MOD**: unsigned modulo
-  | Instruction.mod =>
-    let s ← state.stack.pop
-    let (b, s') ← Stack.pop s.2
-    let (a, s'') ← Stack.pop s'.2
-    let result := if b = 0 then 0 else a % b
-    let s''' ← s''.push result
-    pure (ExecutionResult.ok, { state with stack := s''' })
-
-  -- **SMOD**: signed modulo
-  | Instruction.smod =>
-    let s ← state.stack.pop
-    let (b, s') ← Stack.pop s.2
-    let (a, s'') ← Stack.pop s'.2
-    if b = 0 then
-      let s''' ← s''.push 0
-      pure (ExecutionResult.ok, { state with stack := s''' })
-    else
-      let ra := toSigned a
-      let rb := toSigned b
-      let r := ra % rb
-      let s''' ← s''.push (fromSigned r)
-      pure (ExecutionResult.ok, { state with stack := s''' })
-
-  -- **ADDMOD**: (a + b) % m
-  | Instruction.addmod =>
-    let s ← state.stack.pop
-    let (m, s') ← Stack.pop s.2
-    let (b, s'') ← Stack.pop s'.2
-    let (a, s''') ← Stack.pop s''.2
-    let result := if m = 0 then 0 else (a + b) % m
-    let s4 ← s'''.push result
-    pure (ExecutionResult.ok, { state with stack := s4 })
-
-  -- **MULMOD**: (a * b) % m
-  | Instruction.mulmod =>
-    let s ← state.stack.pop
-    let (m, s') ← Stack.pop s.2
-    let (b, s'') ← Stack.pop s'.2
-    let (a, s''') ← Stack.pop s''.2
-    let result := if m = 0 then 0 else (a * b) % m
-    let s4 ← s'''.push result
-    pure (ExecutionResult.ok, { state with stack := s4 })
-
-  -- **SLT**: signed less than
-  | Instruction.slt =>
-    let s ← state.stack.pop
-    let (b, s') ← Stack.pop s.2
-    let (a, s'') ← Stack.pop s'.2
-    let result := if toSigned a < toSigned b then 1 else 0
-    let s''' ← s''.push result
-    pure (ExecutionResult.ok, { state with stack := s''' })
-
-  -- **SGT**: signed greater than
-  | Instruction.sgt =>
-    let s ← state.stack.pop
-    let (b, s') ← Stack.pop s.2
-    let (a, s'') ← Stack.pop s'.2
-    let result := if toSigned a > toSigned b then 1 else 0
-    let s''' ← s''.push result
-    pure (ExecutionResult.ok, { state with stack := s''' })
-  
-  -- **PUSH**: Push a constant onto stack
   | Instruction.push v =>
-    let s ← state.stack.push v
-    pure (ExecutionResult.ok, { state with stack := s })
+    let stack1 ← Stack.push state.stack v
+    pure (ExecutionResult.ok, { state with stack := stack1 })
 
-  -- **JUMPDEST**: Marker for valid jump target (no-op)
   | Instruction.jumpdest =>
     pure (ExecutionResult.ok, state)
-  
-  -- **JUMP**: Pop target address and jump
+
   | Instruction.jump =>
-    let s ← state.stack.pop
-    let (target, s') ← s.2
-    pure (ExecutionResult.ok, { state with stack := s', pc := target })
-  
-  -- **JUMPI**: Pop target and condition, conditional jump
+    let (target, stack1) ← Stack.pop state.stack
+    pure (ExecutionResult.ok, { state with stack := stack1, pc := target })
+
   | Instruction.jumpi =>
-    let s ← state.stack.pop
-    let (cond, s') ← s.2
-    let (target, s'') ← Stack.pop s'
-    let new_pc := if cond ≠ 0 then target else state.pc + 1
-    pure (ExecutionResult.ok, { state with stack := s'', pc := new_pc })
-  
-  -- **RET**: End execution successfully
+    let (target, stack1) ← Stack.pop state.stack
+    let (cond, stack2) ← Stack.pop stack1
+    let state' := if cond ≠ 0 then { state with stack := stack2, pc := target }
+                 else { state with stack := stack2, pc := state.pc + 1 }
+    pure (ExecutionResult.ok, state')
+
   | Instruction.ret =>
     pure (ExecutionResult.ok, state)
-  
-  -- **REVERT**: End execution with revert
+
   | Instruction.revert =>
     pure (ExecutionResult.revert, state)
-  
-  -- Default: unsupported instruction
+
   | _ => none
 
--- **execute**: Run bytecode until completion or error
--- Uses fuel to prevent infinite loops
+-- Run bytecode until termination, out-of-gas, or error.
 def execute (bytecode : List Instruction) (gas : Gas) (fuel : Nat) :
-    ExecutionResult × ExecutionState := do
+    ExecutionResult × ExecutionState :=
   let initial := ExecutionState.init bytecode gas
   let rec loop (state : ExecutionState) (fuel : Nat) : ExecutionResult × ExecutionState :=
     match fuel with
@@ -325,11 +230,13 @@ def execute (bytecode : List Instruction) (gas : Gas) (fuel : Nat) :
       | none => (ExecutionResult.ok, state)
       | some instr =>
         match executeInstruction instr state with
-        | none => (ExecutionResult.revert, state)
-        | some (ExecutionResult.ok, state') =>
-          loop (state'.nextPc) fuel
+        | none => (ExecutionResult.outOfGas, state)
         | some (result, state') =>
-          (result, state')
+          match instr with
+          | Instruction.stop | Instruction.ret | Instruction.revert => (result, state')
+          | _ =>
+            let nextState := if state'.pc == state.pc then state'.nextPc else state'
+            loop nextState fuel
   loop initial fuel
 
 end EVM
