@@ -105,11 +105,51 @@ def executeInstruction (instr : Instruction) (state : ExecutionState) :
     let result := a ||| b  -- Lean 4 bitwise OR
     let s''' ← s''.push result
     pure (ExecutionResult.ok, { state with stack := s''' })
+
+  -- **XOR**: Bitwise XOR
+  | Instruction.xor =>
+    let s ← state.stack.pop
+    let (b, s') ← Stack.pop s.2
+    let (a, s'') ← Stack.pop s'.2
+    let result := a ^^^ b
+    let s''' ← s''.push result
+    pure (ExecutionResult.ok, { state with stack := s''' })
+
+  -- **NOT**: Bitwise NOT (ones' complement)
+  | Instruction.not =>
+    let s ← state.stack.pop
+    let (a, s') ← Stack.pop s.2
+    let result := toWord256 (2^256 - 1 - a)
+    let s'' ← s'.push result
+    pure (ExecutionResult.ok, { state with stack := s'' })
   
   -- **POP**: Remove top stack item
   | Instruction.pop =>
     let _s ← state.stack.pop
     pure (ExecutionResult.ok, { state with stack := _s.2 })
+
+  -- **DUP**: Duplicate Nth stack item (1-based)
+  | Instruction.dup n =>
+    let s0 := state.stack
+    let idx := n - 1
+    if idx < s0.items.length then
+      let v := s0.items.get! idx
+      let s' ← s0.push v
+      pure (ExecutionResult.ok, { state with stack := s' })
+    else
+      none
+
+  -- **SWAP**: Swap top with Nth (1-based)
+  | Instruction.swap n =>
+    let s0 := state.stack
+    let idx := n
+    if idx < s0.items.length then
+      let top := s0.items.head!
+      let nth := s0.items.get! idx
+      let items := s0.items.set 0 nth |>.set idx top
+      pure (ExecutionResult.ok, { state with stack := { items := items } })
+    else
+      none
   
   -- **MLOAD**: Pop address, push memory value
   | Instruction.mload =>
@@ -118,6 +158,12 @@ def executeInstruction (instr : Instruction) (state : ExecutionState) :
     let value := Memory.read state.memory addr
     let s'' ← s'.push value
     pure (ExecutionResult.ok, { state with stack := s'' })
+
+  -- **MSIZE**: Push memory size
+  | Instruction.msize =>
+    let sz := toWord256 state.memory.size
+    let s ← state.stack.push sz
+    pure (ExecutionResult.ok, { state with stack := s })
   
   -- **MSTORE**: Pop address and value, write to memory
   | Instruction.mstore =>
@@ -147,6 +193,10 @@ def executeInstruction (instr : Instruction) (state : ExecutionState) :
   | Instruction.push v =>
     let s ← state.stack.push v
     pure (ExecutionResult.ok, { state with stack := s })
+
+  -- **JUMPDEST**: Marker for valid jump target (no-op)
+  | Instruction.jumpdest =>
+    pure (ExecutionResult.ok, state)
   
   -- **JUMP**: Pop target address and jump
   | Instruction.jump =>
