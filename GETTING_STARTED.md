@@ -91,6 +91,15 @@ def executeInstruction (...) : Option (...) := do
 
 ## How the Execution Model Works
 
+### Ethereum EVM Execution Flow
+
+This diagram shows how a transaction and block context enter the EVM, how execution uses stack, memory, storage, and gas, and how the machine produces a new state.
+
+![Ethereum EVM Execution Flow](diagram_evm_flow.jpg)
+
+Updated to match the latest Ethereum EVM reference from:
+https://ethereum.org/en/developers/docs/evm/
+
 ### Step 1: Bytecode → Instruction List
 
 ```lean
