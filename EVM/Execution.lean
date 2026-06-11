@@ -69,6 +69,21 @@ def executeInstruction (instr : Instruction) (state : ExecutionState) :
     let result := if b = 0 then 0 else a / b
     let s''' ← s''.push result
     pure (ExecutionResult.ok, { state with stack := s''' })
+
+  -- **SDIV**: signed division
+  | Instruction.sdiv =>
+    let s ← state.stack.pop
+    let (b, s') ← Stack.pop s.2
+    let (a, s'') ← Stack.pop s'.2
+    if b = 0 then
+      let s''' ← s''.push 0
+      pure (ExecutionResult.ok, { state with stack := s''' })
+    else
+      let ra := toSigned a
+      let rb := toSigned b
+      let q := ra / rb
+      let s''' ← s''.push (fromSigned q)
+      pure (ExecutionResult.ok, { state with stack := s''' })
   
   -- **LT**: Pop a, b; push 1 if a < b else 0
   | Instruction.lt =>
@@ -76,6 +91,15 @@ def executeInstruction (instr : Instruction) (state : ExecutionState) :
     let (b, s') ← Stack.pop s.2
     let (a, s'') ← Stack.pop s'.2
     let result := if a < b then 1 else 0
+    let s''' ← s''.push result
+    pure (ExecutionResult.ok, { state with stack := s''' })
+
+  -- **GT**: Pop a, b; push 1 if a > b else 0
+  | Instruction.gt =>
+    let s ← state.stack.pop
+    let (b, s') ← Stack.pop s.2
+    let (a, s'') ← Stack.pop s'.2
+    let result := if a > b then 1 else 0
     let s''' ← s''.push result
     pure (ExecutionResult.ok, { state with stack := s''' })
   
@@ -188,6 +212,68 @@ def executeInstruction (instr : Instruction) (state : ExecutionState) :
     let (value, s'') ← Stack.pop s'
     let stor' := Storage.write state.storage key value
     pure (ExecutionResult.ok, { state with stack := s'', storage := stor' })
+
+  -- **MOD**: unsigned modulo
+  | Instruction.mod =>
+    let s ← state.stack.pop
+    let (b, s') ← Stack.pop s.2
+    let (a, s'') ← Stack.pop s'.2
+    let result := if b = 0 then 0 else a % b
+    let s''' ← s''.push result
+    pure (ExecutionResult.ok, { state with stack := s''' })
+
+  -- **SMOD**: signed modulo
+  | Instruction.smod =>
+    let s ← state.stack.pop
+    let (b, s') ← Stack.pop s.2
+    let (a, s'') ← Stack.pop s'.2
+    if b = 0 then
+      let s''' ← s''.push 0
+      pure (ExecutionResult.ok, { state with stack := s''' })
+    else
+      let ra := toSigned a
+      let rb := toSigned b
+      let r := ra % rb
+      let s''' ← s''.push (fromSigned r)
+      pure (ExecutionResult.ok, { state with stack := s''' })
+
+  -- **ADDMOD**: (a + b) % m
+  | Instruction.addmod =>
+    let s ← state.stack.pop
+    let (m, s') ← Stack.pop s.2
+    let (b, s'') ← Stack.pop s'.2
+    let (a, s''') ← Stack.pop s''.2
+    let result := if m = 0 then 0 else (a + b) % m
+    let s4 ← s'''.push result
+    pure (ExecutionResult.ok, { state with stack := s4 })
+
+  -- **MULMOD**: (a * b) % m
+  | Instruction.mulmod =>
+    let s ← state.stack.pop
+    let (m, s') ← Stack.pop s.2
+    let (b, s'') ← Stack.pop s'.2
+    let (a, s''') ← Stack.pop s''.2
+    let result := if m = 0 then 0 else (a * b) % m
+    let s4 ← s'''.push result
+    pure (ExecutionResult.ok, { state with stack := s4 })
+
+  -- **SLT**: signed less than
+  | Instruction.slt =>
+    let s ← state.stack.pop
+    let (b, s') ← Stack.pop s.2
+    let (a, s'') ← Stack.pop s'.2
+    let result := if toSigned a < toSigned b then 1 else 0
+    let s''' ← s''.push result
+    pure (ExecutionResult.ok, { state with stack := s''' })
+
+  -- **SGT**: signed greater than
+  | Instruction.sgt =>
+    let s ← state.stack.pop
+    let (b, s') ← Stack.pop s.2
+    let (a, s'') ← Stack.pop s'.2
+    let result := if toSigned a > toSigned b then 1 else 0
+    let s''' ← s''.push result
+    pure (ExecutionResult.ok, { state with stack := s''' })
   
   -- **PUSH**: Push a constant onto stack
   | Instruction.push v =>
