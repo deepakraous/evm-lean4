@@ -21,3 +21,8 @@ import EVM.Examples
   match EVM.Υ EVM.Examples.example_world EVM.Examples.example_tx 1000 with
   | none => ("tx failed", 0)
   | some (σ', r) => ("tx ok", r.cumulativeGasUsed)
+
+#eval
+  match EVM.Υ EVM.Examples.example_contract_world EVM.Examples.example_contract_tx 1000 with
+  | none => ("contract tx failed", 0)
+  | some (σ', r) => ("contract tx ok", r.cumulativeGasUsed, r.logs)

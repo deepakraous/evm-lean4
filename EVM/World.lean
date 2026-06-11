@@ -35,6 +35,11 @@ def WorldState.credit (w : WorldState) (addr : Address) (amount : Nat) : WorldSt
   | some acc => WorldState.updateAccount w addr { acc with balance := acc.balance + amount }
   | none => WorldState.updateAccount w addr { nonce := 0, balance := amount, storage := Storage.empty, code := [] }
 
+def WorldState.incrementNonce (w : WorldState) (addr : Address) : WorldState :=
+  match w.findAccount addr with
+  | some acc => WorldState.updateAccount w addr { acc with nonce := acc.nonce + 1 }
+  | none => WorldState.updateAccount w addr { nonce := 1, balance := 0, storage := Storage.empty, code := [] }
+
 def WorldState.debit (w : WorldState) (addr : Address) (amount : Nat) : Option WorldState :=
   match w.findAccount addr with
   | some acc =>

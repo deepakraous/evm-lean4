@@ -26,6 +26,7 @@ def Υ (σ : WorldState) (T : Transaction) (fuel : Nat) : Option (WorldState × 
   else
     -- Debit the upfront from sender (we will refund unused gas later)
     let σ1 ← σ.debit T.from upfront
+    let σ1 := σ1.incrementNonce T.from
     -- Determine recipient account (create if missing)
     let recipient := match T.to with | some a => a | none => "" -- for creation, use empty address placeholder
     let recipientAcc := σ1.findAccount recipient |> Option.getD { nonce := 0, balance := 0, storage := Storage.empty, code := [] }
@@ -33,7 +34,7 @@ def Υ (σ : WorldState) (T : Transaction) (fuel : Nat) : Option (WorldState × 
     if recipientAcc.code = [] then
       -- simple transfer, credit recipient and finalize receipt
       let σ2 := σ1.credit recipient T.value
-      -- refund gas (assume none used for simple transfer)
+      -- refund gas (assume all gas unused for simple transfer)
       let σ3 := σ2.credit T.from (T.gasLimit * T.gasPrice)
       let receipt : Receipt := { postStateRoot := 0, cumulativeGasUsed := 0, logsBloom := 0, logs := [], status := ExecutionResult.ok }
       some (σ3, receipt)
@@ -41,13 +42,10 @@ def Υ (σ : WorldState) (T : Transaction) (fuel : Nat) : Option (WorldState × 
       -- execute recipient code with provided gasLimit
       let (res, execState) := execute recipientAcc.code T.gasLimit fuel
       let gasUsed := T.gasLimit - execState.gas
-      -- charge gasUsed * gasPrice to miner (omitted miner credit here)
-      -- refund remaining gas to sender
       let refund := execState.gas * T.gasPrice
       let σ2 := σ1.credit T.from refund
-      -- apply value transfer
       let σ3 := σ2.credit recipient T.value
-      let receipt : Receipt := { postStateRoot := 0, cumulativeGasUsed := gasUsed, logsBloom := 0, logs := [], status := res }
+      let receipt : Receipt := { postStateRoot := 0, cumulativeGasUsed := gasUsed, logsBloom := 0, logs := execState.logs, status := res }
       some (σ3, receipt)
 
 end EVM

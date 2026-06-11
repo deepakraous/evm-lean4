@@ -34,7 +34,7 @@ def ExecutionState.init (bytecode : List Instruction) (gas : Gas) : ExecutionSta
   pc := 0
   gas := gas
   code := bytecode
-  , logs := []
+  logs := []
 }
 
 -- Helper: Get current instruction
@@ -44,6 +44,10 @@ def ExecutionState.currentInstruction (state : ExecutionState) : Option Instruct
 -- Helper: Advance program counter
 def ExecutionState.nextPc (state : ExecutionState) : ExecutionState :=
   { state with pc := state.pc + 1 }
+
+-- Helper: Add a log entry to execution state
+def ExecutionState.log (state : ExecutionState) (message : String) : ExecutionState :=
+  { state with logs := state.logs ++ [message] }
 
 -- Helper: Jump to address
 def ExecutionState.jump (state : ExecutionState) (target : Nat) : ExecutionState :=

@@ -72,4 +72,29 @@ def example_tx : Transaction :=
   | none => ("tx failed", 0)
   | some (σ', r) => ("tx ok", r.cumulativeGasUsed)
 
+-- **Example 5**: Contract execution with storage logs
+-- A contract account stores value 42 at key 0 and then reads it back.
+def example_storage_contract : List Instruction :=
+  [ Instruction.push 0,
+    Instruction.push 42,
+    Instruction.sstore,
+    Instruction.push 0,
+    Instruction.sload,
+    Instruction.stop ]
+
+def example_contract_world : WorldState :=
+  let sender : Address := "alice"
+  let contract : Address := "contract"
+  let senderAcc := { nonce := 0, balance := 100000, storage := Storage.empty, code := [] }
+  let contractAcc := { nonce := 0, balance := 0, storage := Storage.empty, code := example_storage_contract }
+  { accounts := [(sender, senderAcc), (contract, contractAcc)] }
+
+def example_contract_tx : Transaction :=
+  { from := "alice", nonce := 0, gasPrice := 1, gasLimit := 1000, to := some "contract", value := 0, data := [] }
+
+#eval
+  match Υ example_contract_world example_contract_tx 1000 with
+  | none => ("contract tx failed", 0)
+  | some (σ', r) => ("contract tx ok", r.cumulativeGasUsed, r.logs)
+
 end EVM.Examples
