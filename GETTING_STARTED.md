@@ -93,7 +93,7 @@ def executeInstruction (...) : Option (...) := do
 
 ### Ethereum EVM Execution Flow
 
-This diagram shows how a transaction and block context enter the EVM, how execution uses stack, memory, storage, and gas, and how the machine produces a new state.
+This more granular diagram shows how a transaction and block context enter the EVM, how code is fetched and decoded, how the execution state is updated, and how final return data and state changes are produced.
 
 ![Ethereum EVM Execution Flow](diagram_evm_flow.jpg)
 

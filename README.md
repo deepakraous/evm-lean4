@@ -15,11 +15,11 @@ EVM Model
 
 ## Ethereum EVM Execution Flow
 
-A high-level view of how the EVM processes transaction input and block context, manages stack/memory/storage, consumes gas, and updates the world state.
+A more granular view of how the EVM processes transaction input and block context, decodes opcodes, updates execution state, and produces return data with a new world state root.
 
 ![Ethereum EVM Execution Flow](diagram_evm_flow.jpg)
 
-The diagram reflects the latest Ethereum EVM reference and the Yellow Paper model for machine state and world state.
+The diagram reflects the latest Ethereum EVM reference and the Yellow Paper model for machine state (μ), world state (σ), stack, memory, storage, gas, and opcode execution.
 
 ## Core Components
 
