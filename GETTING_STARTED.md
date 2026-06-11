@@ -95,7 +95,16 @@ def executeInstruction (...) : Option (...) := do
 
 This more granular diagram shows how a transaction and block context enter the EVM, how code is fetched and decoded, how the execution state is updated, and how final return data and state changes are produced.
 
-![Ethereum EVM Execution Flow](diagram_evm_flow.jpg)
+```mermaid
+flowchart TD
+  Tx["Transaction input"] --> Machine["Machine state μ"]
+  Block["Block context"] --> Machine
+  Machine --> Fetch["Code fetch & decode"]
+  Fetch --> Execute["Opcode execution"]
+  Execute --> Gas["Gas accounting"]
+  Execute --> Result["Return data / state root"]
+  Result --> World["World state σ"]
+```
 
 Updated to match the latest Ethereum EVM reference from:
 https://ethereum.org/en/developers/docs/evm/

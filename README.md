@@ -17,7 +17,16 @@ EVM Model
 
 A more granular view of how the EVM processes transaction input and block context, decodes opcodes, updates execution state, and produces return data with a new world state root.
 
-![Ethereum EVM Execution Flow](diagram_evm_flow.jpg)
+```mermaid
+flowchart TD
+  Tx["Transaction input"] --> Machine["Machine state μ"]
+  Block["Block context"] --> Machine
+  Machine --> Fetch["Code fetch & decode"]
+  Fetch --> Execute["Opcode execution"]
+  Execute --> Gas["Gas accounting"]
+  Execute --> Result["Return data / state root"]
+  Result --> World["World state σ"]
+```
 
 The diagram reflects the latest Ethereum EVM reference and the Yellow Paper model for machine state (μ), world state (σ), stack, memory, storage, gas, and opcode execution.
 

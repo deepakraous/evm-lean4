@@ -22,7 +22,12 @@ This document is a step-by-step path for anyone learning Lean 4 and Ethereum’s
 5. Open the folder in VS Code.
 6. Install the Lean extension in VS Code if it is not already installed.
 
-![Lean setup](gif_setup.gif)
+```mermaid
+flowchart LR
+  A[Install Lean 4 & Lake] --> B[Create a Lake project]
+  B --> C[Open project in VS Code]
+  C --> D[Write and run #eval examples]
+```
 
 ### 1.2 First Lean 4 Concepts
 These are the smallest pieces of Lean that you need first.
@@ -62,9 +67,15 @@ These are the smallest pieces of Lean that you need first.
     | Color.blue => "blue"
   ```
 
-![Lean syntax](gif_lean_syntax.gif)
-
-![Lean 4 diagram](diagram_lean4.jpg)
+```mermaid
+flowchart TB
+  def["def: function definition"]
+  abbrev["abbrev: alias/type shortcut"]
+  structure["structure: named fields record"]
+  inductive["inductive: variant type choices"]
+  match["match: pattern matching over values"]
+  def --> abbrev --> structure --> inductive --> match
+```
 
 ### 1.3 Run small examples
 1. Create a file, for example `example.lean`.
@@ -116,7 +127,12 @@ A stack is like a stack of plates: last item in, first item out.
    ```
 3. Try it with `#eval`.
 
-![Stack operations](gif_stack.gif)
+```mermaid
+flowchart LR
+  Push["push(value)"] --> Stack["Stack\nLIFO list"]
+  Stack --> Pop["pop()\nreturns value + new stack"]
+  Pop --> Empty["empty -> none\nstack underflow"]
+```
 
 ### 1.6 Understand immutability and pure functions
 - In Lean, variables do not change once created.
@@ -150,9 +166,24 @@ The EVM is the machine that runs contract code.
 - The **storage** is a long-term filing cabinet for contract state.
 - An **opcode** is one instruction the EVM can run.
 
-![EVM architecture](gif_evm_arch.gif)
+```mermaid
+flowchart LR
+  Tx["Transaction input"] --> EVM["EVM execution engine"]
+  Block["Block context"] --> EVM
+  EVM --> Stack["Stack"]
+  EVM --> Memory["Memory"]
+  EVM --> Storage["Storage"]
+```
 
-![EVM diagram](diagram_evm.jpg)
+```mermaid
+flowchart LR
+  Tx["Transaction input"] --> Machine["Machine state μ"]
+  World["World state σ"] --> Execute["Opcode execution"]
+  Machine --> Fetch["Code fetch & decode"] --> Execute
+  Execute --> Gas["Gas accounting"]
+  Execute --> Result["Return data / state root"]
+  Result --> World
+```
 
 Use these mental images:
 - Stack = stack of plates
@@ -173,7 +204,12 @@ The Yellow Paper is the formal definition of Ethereum. You can use it as a refer
    - gas and transaction execution
 5. Use the repo code to translate Yellow Paper ideas into simple Lean code.
 
-![Yellow Paper guidance](gif_yellowpaper.gif)
+```mermaid
+flowchart LR
+  YP["Yellow Paper"] --> Repo["Repo code"]
+  Repo --> Learner["Learning path"]
+  YP --> Learner
+```
 
 #### Helpful mapping:
 - `σ` in the Yellow Paper is the global state (storage data across accounts).
@@ -221,7 +257,13 @@ Open the files in this order and do not worry about every detail at first.
    - Run the real examples.
    - See how the model behaves.
 
-![Repo path](gif_repo_path.gif)
+```mermaid
+flowchart LR
+  Core["EVM/Core.lean"] --> Ins["EVM/Instructions.lean"]
+  Ins --> State["EVM/State.lean"]
+  State --> Exec["EVM/Execution.lean"]
+  Exec --> Examples["EVM/Examples.lean"]
+```
 
 ### 3.2 Task-based reading
 Do these tasks one by one.
@@ -260,7 +302,12 @@ As you read the repo:
 ## 4. Step-by-step learning schedule
 This schedule is designed for beginners and does not require math experience.
 
-![Learning schedule](gif_schedule.gif)
+```mermaid
+flowchart TB
+  W1["Week 1: Learn Lean 4 basics"] --> W2["Week 2: Learn Ethereum fundamentals"]
+  W2 --> W3["Week 3: Build the EVM model"]
+  W3 --> W4["Week 4: Share and extend the project"]
+```
 
 ### Week 1: Learn Lean 4 from scratch
 - **Day 1:** Install Lean and Lake, create a project.
