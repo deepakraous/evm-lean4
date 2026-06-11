@@ -189,13 +189,14 @@ def executeInstruction (instr : Instruction) (state : ExecutionState) :
     let s ← state.stack.push sz
     pure (ExecutionResult.ok, { state with stack := s })
   
-  -- **MSTORE**: Pop address and value, write to memory
+  -- **MSTORE**: Pop value and address, write to memory
   | Instruction.mstore =>
     let s ← state.stack.pop
-    let (addr, s') ← s.2
-    let (value, s'') ← Stack.pop s'
+    let (value, s') ← s.2
+    let (addr, s'') ← Stack.pop s'
     let mem' := Memory.write state.memory addr value
-    pure (ExecutionResult.ok, { state with stack := s'', memory := mem' })
+    let state' := { state with stack := s'', memory := mem' }
+    pure (ExecutionResult.ok, state'.log s!"mstore addr={addr} value={value}")
   
   -- **SLOAD**: Pop key, push storage value
   | Instruction.sload =>
@@ -203,15 +204,17 @@ def executeInstruction (instr : Instruction) (state : ExecutionState) :
     let (key, s') ← s.2
     let value := Storage.read state.storage key
     let s'' ← s'.push value
-    pure (ExecutionResult.ok, { state with stack := s'' })
+    let state' := { state with stack := s'' }
+    pure (ExecutionResult.ok, state'.log s!"sload key={key} value={value}")
   
-  -- **SSTORE**: Pop key and value, write to storage
+  -- **SSTORE**: Pop value and key, write to storage
   | Instruction.sstore =>
     let s ← state.stack.pop
-    let (key, s') ← s.2
-    let (value, s'') ← Stack.pop s'
+    let (value, s') ← s.2
+    let (key, s'') ← Stack.pop s'
     let stor' := Storage.write state.storage key value
-    pure (ExecutionResult.ok, { state with stack := s'', storage := stor' })
+    let state' := { state with stack := s'', storage := stor' }
+    pure (ExecutionResult.ok, state'.log s!"sstore key={key} value={value}")
 
   -- **MOD**: unsigned modulo
   | Instruction.mod =>
