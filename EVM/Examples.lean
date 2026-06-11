@@ -8,6 +8,8 @@ import EVM.World
 import EVM.Transactions
 import EVM.StateTransition
 
+open EVM.Transactions
+
 namespace EVM.Examples
 
 -- **Example 1**: Simple arithmetic: push 5, push 3, add
@@ -97,7 +99,7 @@ def example_contract_tx : Transaction :=
 
 #eval
   match Υ example_contract_world example_contract_tx 1000 with
-  | none => ("contract tx failed", 0)
+  | none => ("contract tx failed", 0, [])
   | some (σ', r) => ("contract tx ok", r.cumulativeGasUsed, r.logs)
 
 end EVM.Examples

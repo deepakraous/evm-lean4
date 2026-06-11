@@ -6,7 +6,7 @@ import EVM.Transactions
 import EVM.Execution
 
 open EVM.Transactions
-open EVM.Execution
+
 
 namespace EVM
 
@@ -32,7 +32,7 @@ def Υ (σ : WorldState) (T : Transaction) (fuel : Nat) : Option (WorldState × 
     let σ1 := σ1.incrementNonce T.sender
     -- Determine recipient account (create if missing)
     let recipient := match T.to with | some a => a | none => "" -- for creation, use empty address placeholder
-    let recipientAcc := σ1.findAccount recipient |> Option.getD { nonce := 0, balance := 0, storage := Storage.empty, code := [] }
+    let recipientAcc := Option.getD (σ1.findAccount recipient) ({ nonce := 0, balance := 0, storage := Storage.empty, code := [] } : Account)
     -- If recipient has code, execute it; otherwise, plain value transfer
     if recipientAcc.code = [] then
       -- simple transfer, credit recipient and refund all unused gas
@@ -46,7 +46,9 @@ def Υ (σ : WorldState) (T : Transaction) (fuel : Nat) : Option (WorldState × 
       let gasUsed := T.gasLimit - execState.gas
       let refund := execState.gas * T.gasPrice
       let σ2 := σ1.credit T.sender refund
-      let σ3 := if res = ExecutionResult.ok then σ2.credit recipient T.value else σ2
+      let σ3 := match res with
+                | ExecutionResult.ok => σ2.credit recipient T.value
+                | _ => σ2
       let receipt : Receipt := { postStateRoot := 0, cumulativeGasUsed := gasUsed, logsBloom := 0, logs := execState.logs, status := res }
       some (σ3, receipt)
 
