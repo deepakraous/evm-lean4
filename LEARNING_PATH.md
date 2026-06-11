@@ -22,6 +22,8 @@ This document is a step-by-step path for anyone learning Lean 4 and Ethereum’s
 5. Open the folder in VS Code.
 6. Install the Lean extension in VS Code if it is not already installed.
 
+![Lean setup](gif_setup.gif)
+
 ### 1.2 First Lean 4 Concepts
 These are the smallest pieces of Lean that you need first.
 
@@ -59,6 +61,8 @@ These are the smallest pieces of Lean that you need first.
     | Color.green => "green"
     | Color.blue => "blue"
   ```
+
+![Lean syntax](gif_lean_syntax.gif)
 
 ### 1.3 Run small examples
 1. Create a file, for example `example.lean`.
@@ -110,6 +114,8 @@ A stack is like a stack of plates: last item in, first item out.
    ```
 3. Try it with `#eval`.
 
+![Stack operations](gif_stack.gif)
+
 ### 1.6 Understand immutability and pure functions
 - In Lean, variables do not change once created.
 - Functions return new values instead of changing old ones.
@@ -142,6 +148,8 @@ The EVM is the machine that runs contract code.
 - The **storage** is a long-term filing cabinet for contract state.
 - An **opcode** is one instruction the EVM can run.
 
+![EVM architecture](gif_evm_arch.gif)
+
 Use these mental images:
 - Stack = stack of plates
 - Memory = whiteboard
@@ -160,6 +168,8 @@ The Yellow Paper is the formal definition of Ethereum. You can use it as a refer
    - stack, memory, storage
    - gas and transaction execution
 5. Use the repo code to translate Yellow Paper ideas into simple Lean code.
+
+![Yellow Paper guidance](gif_yellowpaper.gif)
 
 #### Helpful mapping:
 - `σ` in the Yellow Paper is the global state (storage data across accounts).
