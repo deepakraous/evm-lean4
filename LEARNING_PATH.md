@@ -241,24 +241,36 @@ Follow these simple tasks:
 Open the files in this order and do not worry about every detail at first.
 
 1. `EVM/Core.lean`
-   - See how `Word256`, `Stack`, `Memory`, and `Storage` are defined.
-   - Notice that `Stack` is just a list and `Memory` is a list of words.
+  - See how `Word256`, `Stack`, `Memory`, and `Storage` are defined.
+  - Notice that `Stack` is just a list and `Memory` is a list of words.
 
 2. `EVM/Instructions.lean`
-   - Read the list of opcodes.
-   - Each opcode is one case in the instruction type.
+  - Read the list of opcodes.
+  - Each opcode is one case in the instruction type.
 
 3. `EVM/State.lean`
-   - Look at the execution state record.
-   - See `stack`, `memory`, `storage`, `pc`, `gas`, and `code`.
+  - Look at the execution state record.
+  - See `stack`, `memory`, `storage`, `pc`, `gas`, and `code`.
 
 4. `EVM/Execution.lean`
-   - This is the interpreter.
-   - Each instruction has one `match` case.
+  - This is the interpreter.
+  - Each instruction has one `match` case.
 
 5. `EVM/Examples.lean`
-   - Run the real examples.
-   - See how the model behaves.
+  - Run the real examples.
+  - See how the model behaves.
+
+6. `EVM/Transactions.lean` (new)
+  - Transaction object, basic validation, and helpers for constructing transactions.
+
+7. `EVM/Gas.lean` (new)
+  - Gas cost table and accounting helpers; map opcodes to gas costs.
+
+8. `EVM/Storage.lean` (new)
+  - Persistent storage helpers and a simple map-based trie scaffold.
+
+9. `EVM/VMHelpers.lean` (new)
+  - Utility conversions and common helpers (word wrapping, byte conversions).
 
 ```mermaid
 flowchart LR
@@ -266,6 +278,10 @@ flowchart LR
   Ins --> State["EVM/State.lean"]
   State --> Exec["EVM/Execution.lean"]
   Exec --> Examples["EVM/Examples.lean"]
+  Exec --> Tx["EVM/Transactions.lean"]
+  Exec --> Gas["EVM/Gas.lean"]
+  State --> Storage["EVM/Storage.lean"]
+  Helpers["EVM/VMHelpers.lean"] -.-> Exec
 ```
 
 ### 3.2 Task-based reading
