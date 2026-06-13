@@ -1,5 +1,8 @@
 # EVM Model in Lean 4
 
+[![Run on Repl.it](https://repl.it/badge/github/deepakraous/evm-lean4)](https://repl.it/github/deepakraous/evm-lean4)
+
+
 A **minimal, educational implementation** of the Ethereum Virtual Machine (EVM) written in pure Lean 4. This model focuses on clarity and correctness while covering the essential components of bytecode execution.
 
 ## Repl.it / Replit ready
